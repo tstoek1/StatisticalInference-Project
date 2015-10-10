@@ -1,0 +1,79 @@
+---
+title: "Statistical Inference Project, Part 2"
+author: "Tiffany Stoeke"
+date: "September 19, 2015"
+output: 
+  pdf_document
+---
+
+##Summary:
+In the second half of the course project, we evaluate the data found in the Tooth Growth R data file and perform some basic exploratory data analysis to compare tooth growth by supplement and dose.  This file describes the effect of Vitamin C on tooth growth in each of 10 guinea pigs at three dosage levels under two delivery methods.  Our dosage levels are 0.5, 1, and 2 mg and our delivery methods are orange juice or ascorbic acid.
+
+Please note that due to page restrictions all relevant t tests will be found in the appendix.
+
+##Assumptions:
+Our assumptions when working with this data are that the data sets are paired per the information in the help file of the data set (note: only 10 guinea pigs were used, with six different variations of the study).  This assumption directly affects our t-test outcomes.  We also assume that the underlying study was performed with relevant wash-out periods (if required), across equivalent time intervals for all observations, and that there are no other confounder variables that would affect tooth growth during the time of the study.  We also assume that no guinea pigs were harmed in the making of this study!
+
+##Exploratory Data Analysis:
+In order to begin our analysis, let's gather some summary information about the data:
+```{r,echo=TRUE}
+library(ggplot2)
+##Load the ToothGrowth Data and show a basic summary of the data.
+data(ToothGrowth)
+summary(ToothGrowth)
+```
+
+The below box plot shows a summary of the tooth growth data, with each delivery method broken out into dosage levels.  Our initial review shows that dosage level plays a role in increasing tooth length across both delivery methods.
+```{r,echo=TRUE}
+##Exploratory Data Analysis - predictor variables are dosage and supplement,
+##outcome variable is length of tooth growth.
+boxplot(len~dose+supp,data=ToothGrowth,col=(c("yellow","orange","red")),main="Tooth Growth",
+        xlab="Supplement by Dosage",ylab="Tooth Length")
+```
+
+##Confidence Intervals, T Test Results and Conclusions:
+Our null hypothesis is that the delivery method (orange juice vs. ascorbic acid) does not affect guinea pig tooth growth.  The alternative hypothesis is that delivery method does indeed play a role in tooth growth.  Please see appendix for the relevant confidence intervals and t test results referenced here.
+
+Due to small sample size, Gosset's t distribution using n-1 degrees of freedom was used.  Per our t test of delivery methods when dosage is not taken into account, our t statistic is 3.3 which is higher than the expected qt value of 2.04523 at 29 degrees of freedom.  The resulting p-value is also well below 5%, therefore we reject our null hypothesis - delivery method clearly affects tooth growth.
+
+We also ran additional t tests to determine if the delivery method affects tooth growth at all three dosage levels.  This will determine whether we reject the null hypothesis at all three dosage levels.  Per our results (see appendix), delivery method plays an important role in dosage levels of 0.5 and 1 mg (t tests and p values indicate to reject the null hypothesis for both of the dosages per qt values at 9 degrees of freedom), but cannot be shown to affect tooth growth at the highest dosage level, 2mg.  The null hypothesis is not rejected at the 2mg dosage level since the number 0 is included in our 95% confidence interval.
+
+******
+
+\newpage
+
+#Appendix
+
+```{r, echo=TRUE}
+##Subset the data in order to perform hypothesis testing by supplement and by dosage 
+##separately so that relevant t-tests can be performed.
+suppVC<-subset(ToothGrowth,supp=="VC")
+suppOJ<-subset(ToothGrowth,supp=="OJ")
+dose1<-subset(ToothGrowth,dose==1) 
+dose2<-subset(ToothGrowth, dose==2) 
+dosehalf<-subset(ToothGrowth,dose==0.5)
+
+##Obtain confidence Intervals on the original data.
+fit <- lm(len ~ ., data=ToothGrowth) 
+summary(fit)
+confint(fit)
+
+##Run t-tests on our null hypothesis.
+##Null hypothesis (H_o):  Supplement type doesn't matter. 
+t.test(len ~ supp, data=ToothGrowth, paired = TRUE) 
+qt(.975,29)
+
+##Additional tests to see if dosage level changes the outcome of tooth growth per supplement.
+##Our null hypothesis for all three tests is that the dosage level per supplement
+##doesn't affect the outcome.  We now have 9 degrees of freedom after the subsetting.
+qt(.975,9)
+
+##t.test at 0.5 mg dosage level:
+t.test(len ~ supp, data=dosehalf, paired = TRUE)
+##t.test at 1 mg dosage level:
+t.test(len ~ supp, data=dose1, paired = TRUE)
+##t.test at 2 mg dosage level:
+t.test(len ~ supp, data=dose2, paired = TRUE)
+```
+
+
